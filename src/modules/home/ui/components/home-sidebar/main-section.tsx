@@ -2,8 +2,15 @@
 
 import React from 'react';
 import {FlameIcon, HomeIcon, PlaySquareIcon} from "lucide-react";
-import {SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem} from "@/components/ui/sidebar";
+import {
+    SidebarGroup,
+    SidebarGroupContent,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem
+} from "@/components/ui/sidebar";
 import Link from "next/link";
+import {useAuth, useClerk} from "@clerk/nextjs";
 
 const items = [
     {
@@ -25,6 +32,9 @@ const items = [
 ];
 
 function MainSection() {
+    const {isSignedIn} = useAuth();
+    const clerk = useClerk();
+
     return (
         <SidebarGroup>
             <SidebarGroupContent>
@@ -35,10 +45,16 @@ function MainSection() {
                                 tooltip={item.title}
                                 asChild={true}
                                 isActive={false}
-                                onClick={() => {}}
+                                onClick={(event) => {
+                                    if (!isSignedIn && item.auth) {
+                                        event.preventDefault();
+                                        return clerk.openSignIn();
+                                    }
+                                }
+                                }
                             >
                                 <Link href={item.url} className={"flex items-center gap-4"}>
-                                    <item.icon />
+                                    <item.icon/>
                                     <span className={"text-sm"}>{item.title}</span>
                                 </Link>
                             </SidebarMenuButton>
