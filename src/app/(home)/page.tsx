@@ -5,7 +5,7 @@ import {ErrorBoundary} from "react-error-boundary";
 
 export default async function Home() {
     // const data = await trpc.hello({text: "raid"});
-    void trpc.hello.prefetch({text: "Raid"}); // populate data cache
+    void trpc.categories.getMany.prefetch(); // populate data cache
 
     return (
         <HydrateClient>

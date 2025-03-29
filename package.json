@@ -2,6 +2,7 @@
   "name": "new-tube",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev:all": "concurrently \"bun run dev:webhook\" \"bun run dev\"",
     "dev": "next dev",

@@ -3,12 +3,12 @@
 import {trpc} from "@/trpc/client";
 
 function Client() {
-    const [data] = trpc.hello.useSuspenseQuery({
-        text: "Raid"
-    });
+    const [data] = trpc.categories.getMany.useSuspenseQuery();
 
     return (
-        <div>Page Client: {data.greeting}</div>
+        <div>
+            {JSON.stringify(data)}
+        </div>
     );
 }
 
