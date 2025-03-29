@@ -1,19 +1,24 @@
 import {HydrateClient, trpc} from "@/trpc/server";
-import Client from "@/app/(home)/client";
-import {Suspense} from "react";
-import {ErrorBoundary} from "react-error-boundary";
+import HomeView from "@/modules/home/ui/views/home-view";
 
-export default async function Home() {
-    // const data = await trpc.hello({text: "raid"});
+export const dynamic = "force-dynamic";
+
+type Props = {
+    searchParams: Promise<{
+        categoryId?: string;
+    }>
+}
+
+export default async function Page({searchParams}: Props) {
+    const {categoryId} = await searchParams;
+
+    // vercel buiding the app will think that it's a static application does not know that this is actually prefetching something
+    //we need to add the line above ^
     void trpc.categories.getMany.prefetch(); // populate data cache
 
     return (
         <HydrateClient>
-            <Suspense fallback={<p>Loading...</p>}>
-                <ErrorBoundary fallback={<p>Error...s</p>}>
-                    <Client/>
-                </ErrorBoundary>
-            </Suspense>
+            <HomeView categoryId={categoryId}/>
         </HydrateClient>
     );
 }
