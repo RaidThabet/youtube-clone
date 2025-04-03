@@ -102,7 +102,7 @@ export function VideosSectionSuspense() {
                     </TableHeader>
                     <TableBody>
                         {data.pages.flatMap((page) => page.items).map((video) => (
-                            <Link href={`/studio/video/${video.id}`} key={video.id} legacyBehavior>
+                            <Link href={`/studio/videos/${video.id}`} key={video.id} legacyBehavior>
                                 <TableRow className={"cursor-pointer"}>
                                     <TableCell className={"pl-6"}>
                                         <div className="flex items-center gap-4">
