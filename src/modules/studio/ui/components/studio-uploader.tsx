@@ -19,6 +19,7 @@ function StudioUploader({endpoint, onSuccess}: Props) {
                 id={"video-uploader"}
                 endpoint={endpoint}
                 className={"hidden group/uploader"}
+                onSuccess={onSuccess}
             />
             <MuxUploaderDrop muxUploader={"video-uploader"} className={"group/drop"}>
                 <div className={"flex flex-col items-center gap-6"} slot={"heading"}>
