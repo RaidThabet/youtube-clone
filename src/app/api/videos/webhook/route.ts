@@ -1,5 +1,5 @@
 import {
-    VideoAssetCreatedWebhookEvent,
+    VideoAssetCreatedWebhookEvent, VideoAssetDeletedWebhookEvent,
     VideoAssetErroredWebhookEvent,
     VideoAssetReadyWebhookEvent, VideoAssetTrackReadyWebhookEvent
 } from "@mux/mux-node/resources/webhooks";
@@ -16,6 +16,7 @@ type WebhookEvent =
     | VideoAssetReadyWebhookEvent
     | VideoAssetErroredWebhookEvent
     | VideoAssetTrackReadyWebhookEvent
+    | VideoAssetDeletedWebhookEvent
 
 export const POST = async (req: Request) => {
     if (!SIGNING_SECRET) {
@@ -47,6 +48,8 @@ export const POST = async (req: Request) => {
             if (!data.upload_id) {
                 return new Response("No upload id found", {status: 400});
             }
+
+            console.log("Creating video:", {uploadId: data.upload_id});
 
             await db
                 .update(videos)
@@ -84,6 +87,35 @@ export const POST = async (req: Request) => {
                     previewUrl,
                     duration
                 })
+                .where(eq(videos.muxUploadId, data.upload_id));
+            break;
+        }
+        case "video.asset.errored": {
+            const data = payload.data as VideoAssetErroredWebhookEvent["data"];
+
+            if (!data.upload_id) {
+                return new Response("Missing upload id", {status: 400});
+            }
+
+            await db
+                .update(videos)
+                .set({
+                    muxStatus: data.status,
+                })
+                .where(eq(videos.muxUploadId, data.upload_id));
+            break;
+        }
+        case "video.asset.deleted": {
+            const data = payload.data as VideoAssetDeletedWebhookEvent["data"];
+
+            if (!data.upload_id) {
+                return new Response("Missing upload id", {status: 400});
+            }
+
+            console.log("Deleting video:", {uploadId: data.upload_id});
+
+            await db
+                .delete(videos)
                 .where(eq(videos.muxUploadId, data.upload_id));
             break;
         }
