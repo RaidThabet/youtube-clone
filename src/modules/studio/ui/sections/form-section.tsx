@@ -81,6 +81,17 @@ function FormSectionSuspense({videoId}: Props) {
         }
     });
 
+    const restoreThumbnail = trpc.videos.restoreThumbnail.useMutation({
+        onSuccess: () => {
+            utils.studio.getMany.invalidate();
+            utils.studio.getOne.invalidate({id: videoId});
+            toast.success("Video thumbnail restored!");
+        },
+        onError: (error) => {
+            toast.error("Something went wrong");
+        }
+    });
+
 
     const form = useForm<z.infer<typeof videoUpdateSchema>>({
         resolver: zodResolver(videoUpdateSchema),
@@ -107,7 +118,7 @@ function FormSectionSuspense({videoId}: Props) {
 
     return (
         <>
-            <ThumbnailUploadModal videoId={videoId} open={thumbnailModalOpen} onOpenChange={setThumbnailModalOpen} />
+            <ThumbnailUploadModal videoId={videoId} open={thumbnailModalOpen} onOpenChange={setThumbnailModalOpen}/>
             <FormProvider {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)}>
                     <div className={"flex items-center justify-between mb-6"}>
@@ -215,7 +226,7 @@ function FormSectionSuspense({videoId}: Props) {
                                                             <SparklesIcon className={"size-4 mr-1"}/>
                                                             AI-generated
                                                         </DropdownMenuItem>
-                                                        <DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => restoreThumbnail.mutate({id: videoId})}>
                                                             <RotateCcwIcon className={"size-4 mr-1"}/>
                                                             Restore
                                                         </DropdownMenuItem>
