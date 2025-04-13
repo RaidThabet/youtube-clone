@@ -1,5 +1,5 @@
-import { createUploadthing, type FileRouter } from "uploadthing/next";
-import { UploadThingError } from "uploadthing/server";
+import {createUploadthing, type FileRouter} from "uploadthing/next";
+import {UploadThingError, UTApi} from "uploadthing/server";
 import {z} from "zod";
 import {auth} from "@clerk/nextjs/server";
 import {db} from "@/db";
@@ -19,7 +19,7 @@ export const ourFileRouter = {
         .input(z.object({
             videoId: z.string().uuid()
         }))
-        .middleware(async ({ input }) => {
+        .middleware(async ({input}) => {
             const {userId: clerkUserId} = await auth();
 
             if (!clerkUserId) throw new UploadThingError("Unauthorized");
@@ -33,13 +33,44 @@ export const ourFileRouter = {
                 throw new UploadThingError("Unauthorized");
             }
 
-            return { user, ...input };
+            const [existingVideo] = await db
+                .select({
+                    thumbnailKey: videos.thumbnailKey
+                })
+                .from(videos)
+                .where(and(
+                    eq(videos.id, input.videoId),
+                    eq(videos.userId, user.id)
+                ));
+
+            if (!existingVideo) {
+                throw new UploadThingError("Not found");
+            }
+
+            if (existingVideo.thumbnailKey) {
+                const utapi = new UTApi();
+
+                await utapi.deleteFiles(existingVideo.thumbnailKey);
+                await db
+                    .update(videos)
+                    .set({
+                        thumbnailKey: null,
+                        thumbnailUrl: null
+                    })
+                    .where(and(
+                        eq(videos.id, input.videoId),
+                        eq(videos.userId, user.id)
+                    ));
+            }
+
+            return {user, ...input};
         })
-        .onUploadComplete(async ({ metadata, file }) => {
+        .onUploadComplete(async ({metadata, file}) => {
             await db
                 .update(videos)
                 .set({
-                    thumbnailUrl: file.ufsUrl
+                    thumbnailUrl: file.ufsUrl,
+                    thumbnailKey: file.key
                 })
                 .where(and(
                     eq(videos.id, metadata.videoId),
@@ -47,7 +78,7 @@ export const ourFileRouter = {
                 ));
 
             // !!! Whatever is returned here is sent to the clientside `onClientUploadComplete` callback
-            return { uploadedBy: metadata.user.id };
+            return {uploadedBy: metadata.user.id};
         }),
 } satisfies FileRouter;
 

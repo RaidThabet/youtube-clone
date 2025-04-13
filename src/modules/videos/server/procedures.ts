@@ -5,6 +5,7 @@ import {mux} from "@/lib/mux";
 import {and, eq} from "drizzle-orm";
 import {TRPCError} from "@trpc/server";
 import {z} from "zod";
+import {UTApi} from "uploadthing/server";
 
 export const videosRouter = createTRPCRouter({
     restoreThumbnail: protectedProcedure
@@ -22,6 +23,22 @@ export const videosRouter = createTRPCRouter({
 
             if (!existingVideo) {
                 throw new TRPCError({code: "NOT_FOUND"});
+            }
+
+            if (existingVideo.thumbnailKey) {
+                const utapi = new UTApi();
+                
+                await utapi.deleteFiles(existingVideo.thumbnailKey);
+                await db
+                    .update(videos)
+                    .set({
+                        thumbnailKey: null,
+                        thumbnailUrl: null
+                    })
+                    .where(and(
+                        eq(videos.id, input.id),
+                        eq(videos.userId, userId)
+                    ));
             }
 
             if (!existingVideo.muxPlaybackId) {
